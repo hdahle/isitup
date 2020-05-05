@@ -1,0 +1,20 @@
+{
+  "name": "wheresitup",
+  "version": "1.0.0",
+  "description": "",
+  "main": "wheresitup.js",
+  "scripts": {
+    "futureplanet": "node wheresitup.js --id `cat wheresitup.id` --token `cat wheresitup.token` --url https://futureplanet.eco --key tmp",
+    "pexip": "node wheresitup.js --id `cat wheresitup.id` --token `cat wheresitup.token` --url http://pexip.com --key tmp",
+    "get": "node wheresitup.js --id `cat wheresitup.id` --token `cat wheresitup.token` --job --key tmp",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "minimist": "^1.2.5",
+    "moment": "^2.25.3",
+    "node-fetch": "^2.6.0",
+    "redis": "^3.0.2"
+  }
+}
