@@ -1,5 +1,5 @@
 #!/bin/sh
-# This is pretty much cloned from api.whereisitup.com
+# This is pretty much cloned from api.wheresitup.com
 # H. Dahle
 
 curl -i "https://api.wheresitup.com/v4/jobs" \
