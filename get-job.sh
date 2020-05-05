@@ -1,4 +1,6 @@
 #!/bin/sh
+# Based on code from api.whereisitup.com
+# H. Dahle
 
 JOBID=$1
 
