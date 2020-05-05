@@ -1,5 +1,5 @@
 #!/bin/sh
-# Based on code from api.whereisitup.com
+# Based on code from api.wheresitup.com
 # H. Dahle
 
 JOBID=$1
