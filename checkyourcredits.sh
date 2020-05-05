@@ -1,5 +1,5 @@
 #!/bin/sh
-# Code is from api.whereisitup.com
+# Code is from api.wheresitup.com
 # H.Dahle
 
 curl -i "https://api.wheresitup.com/v4/credits" \
