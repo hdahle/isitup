@@ -8,15 +8,13 @@ var redis = require('redis');
 var moment = require('moment');
 var argv = require('minimist')(process.argv.slice(2));
 const momFmt = 'YY-MM-DD hh:mm:ss';
-
-const sources = ['seattle', 'newyork', 'bogota', 'london'];//, 'oslo', 'frankfurt', 'stockholm', 'sydney', 'bangalore', 'bangkok', 'singapore', 'tokyo'];
+const sources = ['seattle', 'newyork', 'bogota', 'london', 'oslo', 'frankfurt', 'stockholm', 'sydney', 'bangalore', 'bangkok', 'singapore', 'tokyo'];
 
 // process commandline
 const redisKey = argv.key;
 const jobURL = argv.url;
 const id = argv.id;
 const token = argv.token;
-
 if (redisKey === undefined || redisKey === null || jobURL === undefined || jobURL === null || id === undefined || id === null || token === undefined || token === null) {
   console.log('Usage:\n\tnode wheresitup.js --key <rediskey> --id <id> --token <token> --url <http(s)://url>');
   console.log('\tnode wheresitup.js --key <rediskey> --id <id> --token <token> --job <jobID>');
@@ -61,22 +59,25 @@ async function main() {
   // Set a timeout
   let myTimeout = setTimeout(async function () {
     clearInterval(myInterval);
-    console.log(moment().format(momFmt) + ' Timed out after 30 sec')
+    console.log(moment().format(momFmt) + ' Timed out after 60 sec')
   }, 60000);
 
-  // Poll for results at 1 sec intervals
+  // Poll for results at 1 sec intervals. Easier done with ASYNC
   let json = '';
   let myInterval = setInterval(async function () {
     json = await getJobResult(wheresitupURL, wheresitupResultOptions, jobID);
     let complete = Object.keys(json.response.complete).toString();
     let error = Object.keys(json.response.error).toString();
     let inprogr = Object.keys(json.response.in_progress).toString();
-    console.log('Complete:', complete, '/ In progress:', inprogr, '/ Error:', error);
+    console.log('  Complete:\x1b[32m', complete,
+      '\x1b[0mIn progress:\x1b[33m', inprogr.length ? inprogr : 'none',
+      '\x1b[0mError:\x1b[31m', error.length ? error : 'none', '\x1b[0m'
+    );
+    // We're done, stop the interval and kill the timeout, then process result
     if (inprogr.length === 0) {
       clearInterval(myInterval);
       clearTimeout(myTimeout);
       let res = buildResult(json);
-      //console.log(res)
       saveResult(res, redisKey);
     }
   }, 1000);
@@ -131,7 +132,7 @@ function buildResult(json) {
 async function getJobResult(url, options, jobID) {
   const response = await fetch(url + '/' + jobID, options);
   const json = await response.json();
-  console.log(moment().format(momFmt) + ' Request: ', json.request.url, moment(json.request.easy_time).format(momFmt));
+  console.log(moment().format(momFmt) + ' Request: ', json.request.url);
   return json;
 }
 
