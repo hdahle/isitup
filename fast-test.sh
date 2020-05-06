@@ -3,7 +3,7 @@
 # H. Dahle
 
 curl -i "https://api.wheresitup.com/v4/jobs" \
-    -H "Auth: Bearer 5eac3ce040d03f563c201b0e 3e723771ee0443b812b3138e5fae3b4f" \
+    -H "Auth: Bearer `cat wheresitup.id` `cat wheresitup.token`" \
     -H "Content-Type: application/json" \
     -d \
     '{
@@ -14,3 +14,4 @@ curl -i "https://api.wheresitup.com/v4/jobs" \
             "fast": { "timeout": 10 }
         }
     }'
+echo ""
