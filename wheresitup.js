@@ -9,7 +9,7 @@ var moment = require('moment');
 var argv = require('minimist')(process.argv.slice(2));
 const momFmt = 'YY-MM-DD hh:mm:ss';
 
-const sources = ['seattle', 'newyork', 'bogota', 'london', 'oslo', 'frankfurt', 'stockholm', 'sydney', 'bangalore', 'bangkok', 'singapore', 'tokyo'];
+const sources = ['seattle', 'newyork', 'bogota', 'london'];//, 'oslo', 'frankfurt', 'stockholm', 'sydney', 'bangalore', 'bangkok', 'singapore', 'tokyo'];
 
 // process commandline
 const redisKey = argv.key;
@@ -53,7 +53,7 @@ async function main() {
 
   // Schedule the job and get the jobID
   let jobID = await startJob(wheresitupURL, wheresitupStartOptions);
-  console.log('jobID:', jobID);
+  console.log(moment().format(momFmt) + ' jobID:', jobID);
   if (jobID === undefined || jobID === null) {
     return;
   }
@@ -61,8 +61,8 @@ async function main() {
   // Set a timeout
   let myTimeout = setTimeout(async function () {
     clearInterval(myInterval);
-    console.log('Timed out after 30 sec')
-  }, 30000);
+    console.log(moment().format(momFmt) + ' Timed out after 30 sec')
+  }, 60000);
 
   // Poll for results at 1 sec intervals
   let json = '';
@@ -76,7 +76,7 @@ async function main() {
       clearInterval(myInterval);
       clearTimeout(myTimeout);
       let res = buildResult(json);
-      console.log(res)
+      //console.log(res)
       saveResult(res, redisKey);
     }
   }, 1000);
@@ -131,7 +131,7 @@ function buildResult(json) {
 async function getJobResult(url, options, jobID) {
   const response = await fetch(url + '/' + jobID, options);
   const json = await response.json();
-  console.log('Request: ', json.request.url, moment(json.request.easy_time).format(momFmt));
+  console.log(moment().format(momFmt) + ' Request: ', json.request.url, moment(json.request.easy_time).format(momFmt));
   return json;
 }
 
@@ -172,15 +172,92 @@ function saveResult(result, redisKey) {
 
   redClient.zadd(redisKey, moment().format('x'), redisValue, function (err, res) {
     if (res) {
-      console.log(moment().format(momFmt) + ' Result:' + res);
+      console.log(moment().format(momFmt) + ' Redis ZADD Result:' + res);
     } else {
-      console.log(moment().format(momFmt) + ' Error: ' + err);
+      console.log(moment().format(momFmt) + ' Redis ZADD Error: ' + err);
     }
-    setInterval((() => {
-      process.exit();
-    }), 1000);
-  });
+    // Now read back the entire sorted set, and store as a single key-value pa
+    getSortedSet(redClient, redisKey);
 
+  });
+}
+
+//
+// Read entire timeseries, including the entry we just saved
+// Convert timeseries into a simple JSON with a timeseries per city
+// Save the timeseries to a separate key/value pair
+// 
+function getSortedSet(redClient, key) {
+  redClient.zrange(key, 0, 1000, function (err, res) {
+    if (res) {
+      let val = {
+        url: '',
+        key: key,
+        dateTime: moment().format('YYYY-MM-DD hh:mm:ss'),
+        data: []
+      };
+      let tmp = [];
+      for (let i = 0; i < res.length; i++) {
+        try {
+          let json = JSON.parse(res[i]);
+          val.url = json.url;
+          json.cities.forEach(x => {
+            tmp.push({
+              loc: x.location,
+              time: moment(json.time).format('YYYY-MM-DD hh:mm:ss'),
+              redir: x.redirects,
+              connect: x.timingConnected,
+              transfer: x.timingTransfer
+            });
+          });
+        } catch {
+          console.log(moment().format(momFmt) + ' Invalid JSON', res[i])
+        }
+      }
+
+      // extract list of unique cities
+      let uniqueCities = [];
+      tmp.map(x => x.loc).forEach(x => {
+        if (!uniqueCities.includes(x)) {
+          uniqueCities.push(x)
+        }
+      });
+
+      // val.data should contain list of unique cities with their measurements
+      val.data = uniqueCities.map(x => ({
+        loc: x,
+        data: []
+      }));
+
+      // then add the measurements for each city
+      val.data.forEach(city => {
+        city.data = tmp.filter(x => city.loc === x.loc)
+      })
+
+      // Save entire SET as a single entry 
+      let v = JSON.stringify(val);
+      let k = key + '.ts';
+
+      console.log(moment().format(momFmt) +
+        ' Key:' + k +
+        ' Len:' + v.length +
+        ' Timestamp:' + val.dateTime +
+        ' Val:' + v.substring(0, 60));
+
+      redClient.set(k, v, function (err, res) {
+        if (res) {
+          console.log(moment().format(momFmt) + ' Redis SET Result:' + res);
+        } else {
+          console.log(moment().format(momFmt) + ' Redis SET Error: ' + err);
+        }
+        setInterval((() => {
+          process.exit();
+        }), 1000);
+      });
+    } else {
+      console.log(moment().format(momFmt) + ' Redis ZRANGE error:' + err);
+    }
+  });
 }
 
 // EOF //
