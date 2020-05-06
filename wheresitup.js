@@ -17,18 +17,14 @@ const jobURL = argv.url;
 const id = argv.id;
 const token = argv.token;
 
-if (redisKey === undefined || jobURL === undefined || id === undefined || token === undefined) {
+if (redisKey === undefined || redisKey === null || jobURL === undefined || jobURL === null || id === undefined || id === null || token === undefined || token === null) {
   console.log('Usage:\n\tnode wheresitup.js --key <rediskey> --id <id> --token <token> --url <http(s)://url>');
   console.log('\tnode wheresitup.js --key <rediskey> --id <id> --token <token> --job <jobID>');
   console.log('\n\tUse either --jobURL (to schedule a job) or --jobID (to retrieve results of a job), not both')
   return;
 }
 
-if (jobURL !== null) {
-  main();
-} else {
-  return;
-}
+main();
 
 async function main() {
   const wheresitupURL = 'https://api.wheresitup.com/v4/jobs';
