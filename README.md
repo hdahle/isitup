@@ -48,3 +48,11 @@ Running a test involves:
 https://wheresitup.com/docs/#introduction
 https://redis.io/commands/zadd
 https://redis.io/commands/zrange
+
+### Using Cron to run these tests regularly
+
+The shell script ````install.sh```` installs an entry into ````crontab````. The installer tries to figure out the proper paths and directories since cron may run with different ````PATH```` values. Seems to work on both Ubuntu 16.04 and WSL2/Ubuntu 18.04. This is a typical crontab-entry
+
+````
+cd /home/bitnami/isitup && /opt/bitnami/nodejs/bin/node wheresitup.js --id xxx --token xxx --url https://futureplanet.eco --key futureplanet.eco.z >> /home/bitnami/log/cron.log 2>&1
+````
