@@ -4,11 +4,10 @@
   "description": "",
   "main": "wheresitup.js",
   "scripts": {
-    "futureplanet": "node wheresitup.js --id `cat wheresitup.id` --token `cat wheresitup.token` --url https://futureplanet.eco --key tmp",
-    "pexip": "node wheresitup.js --id `cat wheresitup.id` --token `cat wheresitup.token` --url https://pexip.com --key tmp",
-    "pexme": "node wheresitup.js --id `cat wheresitup.id` --token `cat wheresitup.token` --url https://pexip.me --key tmp",
-    "aq": "node wheresitup.js --id `cat wheresitup.id` --token `cat wheresitup.token` --url https://airquality.eco --key tmp",
-    "get": "node wheresitup.js --id `cat wheresitup.id` --token `cat wheresitup.token` --job --key tmp",
+    "futureplanet": "node wheresitup.js --id `cat wheresitup.id` --token `cat wheresitup.token` --url https://futureplanet.eco --key futureplanet.eco.z",
+    "pexip": "node wheresitup.js --id `cat wheresitup.id` --token `cat wheresitup.token` --url https://pexip.com --key pexip.com.z",
+    "pexme": "node wheresitup.js --id `cat wheresitup.id` --token `cat wheresitup.token` --url https://pexip.me --key pexip.me.z",
+    "aq": "node wheresitup.js --id `cat wheresitup.id` --token `cat wheresitup.token` --url https://airquality.eco --key airquality.eco.z",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
