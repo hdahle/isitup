@@ -9,7 +9,7 @@ var moment = require('moment');
 var argv = require('minimist')(process.argv.slice(2));
 const momFmt = 'YY-MM-DD hh:mm:ss';
 
-const sources = ['seattle', 'newyork', 'bogota', 'london', 'oslo', 'amsterdam', 'frankfurt', 'stockholm', 'sydney', 'bangalore', 'bangkok', 'singapore', 'tokyo'];
+const sources = ['seattle', 'newyork', 'bogota', 'london', 'oslo', 'frankfurt', 'stockholm', 'sydney', 'bangalore', 'bangkok', 'singapore', 'tokyo'];
 
 // process commandline
 const redisKey = argv.key;
@@ -71,7 +71,7 @@ async function main() {
   // Poll for results at 1 sec intervals
   let json = '';
   let myInterval = setInterval(async function () {
-    json = await getResults(wheresitupURL, wheresitupResultOptions, jobID);
+    json = await getJobResult(wheresitupURL, wheresitupResultOptions, jobID);
     let complete = Object.keys(json.response.complete).toString();
     let error = Object.keys(json.response.error).toString();
     let inprogr = Object.keys(json.response.in_progress).toString();
@@ -79,9 +79,9 @@ async function main() {
     if (inprogr.length === 0) {
       clearInterval(myInterval);
       clearTimeout(myTimeout);
-      let res = buildResults(json);
+      let res = buildResult(json);
       console.log(res)
-      saveResults(res);
+      saveResult(res, redisKey);
     }
   }, 1000);
 }
@@ -89,7 +89,7 @@ async function main() {
 //
 // Convert the JSON of completed tests to something a bit more compact
 //
-function buildResults(json) {
+function buildResult(json) {
   // list of completed cities
   let cities = Object.keys(json.response.complete);
 
@@ -97,6 +97,7 @@ function buildResults(json) {
   let result = {
     url: json.request.url,
     time: json.request.easy_time,
+    unixtime: moment(json.request.easy_time).format('x'),
     cities: []
   };
 
@@ -131,7 +132,7 @@ function buildResults(json) {
 //
 // Fetch the results of a completed job
 //
-async function getResults(url, options, jobID) {
+async function getJobResult(url, options, jobID) {
   const response = await fetch(url + '/' + jobID, options);
   const json = await response.json();
   console.log('Request: ', json.request.url, moment(json.request.easy_time).format(momFmt));
@@ -148,9 +149,9 @@ async function startJob(url, options) {
 }
 
 //
-// Store results to Redis
+// Store results to Redis Sorted Set
 //
-function saveResults(results, redisKey) {
+function saveResult(result, redisKey) {
   var redClient = redis.createClient();
   redClient.on('connect', function () {
     console.log(moment().format(momFmt) + ' Redis client connected');
@@ -166,26 +167,24 @@ function saveResults(results, redisKey) {
   });
 
   // Store key/value pair to Redis
-  let redisValue = JSON.stringify(results);
+  let redisValue = JSON.stringify(result);
   console.log(moment().format(momFmt) +
-    ' Storing ' + redisValue.length +
-    ' bytes, key=' + redisKey +
-    ' value=' + redisValue.substring(0, 60));
-  /*
-  redClient.set(redisKey, redisValue, function (error, result) {
-    if (result) {
-      console.log(moment().format(momFmt) + ' Result:' + result);
+    ' Key:' + redisKey +
+    ' Len:' + redisValue.length +
+    ' Timestamp:' + result.unixtime +
+    ' Val:' + redisValue.substring(0, 60));
+
+  redClient.zadd(redisKey, moment().format('x'), redisValue, function (err, res) {
+    if (res) {
+      console.log(moment().format(momFmt) + ' Result:' + res);
     } else {
-      console.log(moment().format(momFmt) + ' Error: ' + error);
+      console.log(moment().format(momFmt) + ' Error: ' + err);
     }
+    setInterval((() => {
+      process.exit();
+    }), 1000);
   });
-  */
-  // exit
-  setInterval((() => {
-    process.exit();
-  }), 1000)
 
 }
-
 
 // EOF //
