@@ -1,3 +1,4 @@
 *.id
 *.token
 node_modules/*
+sources.json
