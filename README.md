@@ -1,6 +1,6 @@
 # isitup
 
-Just some tools that use api.whereisitup.com
+Just some tools that use api.whereisitup.com. The goal is to monitor web-site performance over time.
 
 ### Authentication
 
