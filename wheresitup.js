@@ -203,7 +203,7 @@ function getSortedSet(redClient, key) {
           json.cities.forEach(x => {
             tmp.push({
               loc: x.location,
-              time: moment(json.unixtime, 'x').format('YYYY-MM-DD hh:mm:ssZ'),
+              time: json.time, //moment(json.unixtime, 'x').format('YYYY-MM-DD hh:mm:ssZ'),
               redir: x.redirects,
               connect: x.timingConnected,
               transfer: x.timingTransfer
