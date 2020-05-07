@@ -179,7 +179,6 @@ function saveResult(result, redisKey) {
     }
     // Now read back the entire sorted set, and store as a single key-value pa
     getSortedSet(redClient, redisKey);
-
   });
 }
 
@@ -194,7 +193,6 @@ function getSortedSet(redClient, key) {
       let val = {
         url: '',
         key: key,
-        dateTime: moment().format('YYYY-MM-DD hh:mm:ss'),
         data: []
       };
       let tmp = [];
@@ -205,7 +203,7 @@ function getSortedSet(redClient, key) {
           json.cities.forEach(x => {
             tmp.push({
               loc: x.location,
-              time: moment(json.time).format('YYYY-MM-DD hh:mm:ss'),
+              time: moment(json.unixtime, 'x').format('YYYY-MM-DD hh:mm:ssZ'),
               redir: x.redirects,
               connect: x.timingConnected,
               transfer: x.timingTransfer
@@ -235,14 +233,13 @@ function getSortedSet(redClient, key) {
         city.data = tmp.filter(x => city.loc === x.loc)
       })
 
-      // Save entire SET as a single entry 
-      let v = JSON.stringify(val);
+      // Save entire mangled sorted set as a single entry key/value pair
       let k = key + '.ts';
+      let v = JSON.stringify(val);
 
       console.log(moment().format(momFmt) +
         ' Key:' + k +
         ' Len:' + v.length +
-        ' Timestamp:' + val.dateTime +
         ' Val:' + v.substring(0, 60));
 
       redClient.set(k, v, function (err, res) {
