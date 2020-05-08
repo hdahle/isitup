@@ -46,7 +46,9 @@ Running a test involves:
 ### Useful reading
 
 https://wheresitup.com/docs/#introduction
+
 https://redis.io/commands/zadd
+
 https://redis.io/commands/zrange
 
 ### Using Cron to run these tests regularly
